@@ -4,6 +4,11 @@
  */
 package GrafoMatriz;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
 import Datos.Usuario;
 
 /**
@@ -51,21 +56,6 @@ public class GrafoMatriz {
             }
         }
         return (i < numVerts) ? i : -1;
-    }
-
-    public void nuevoArco(Usuario a, Usuario b) throws Exception {
-        int va, vb;
-        va = numVertice(a);
-        vb = numVertice(b);
-        if (va < 0 || vb < 0)
-            throw new Exception("Vértice no existe");
-        matAd[va][vb] = 1;
-    }
-
-    public void nuevoArco(int va, int vb) throws Exception {
-        if (va < 0 || vb < 0)
-            throw new Exception("Vértice no existe");
-        matAd[va][vb] = 1;
     }
 
     public boolean adyacente(Usuario a, Usuario b) throws Exception {
@@ -147,6 +137,86 @@ public class GrafoMatriz {
             for (int i = 0; i < numVerts; i++) {
                 matAd[i][j] = matAd[i][j + 1];
             }
+        }
+    }
+
+    //Lista de solicitudes
+    public List<Usuario> verticesConArcoApuntandoHacia(Usuario nombreVertice) throws Exception {
+        int indice = numVertice(nombreVertice);
+        if (indice < 0)
+            throw new Exception("Vértice no existe");
+
+        List<Usuario> verticesConArco = new ArrayList<>();
+        for (int i = 0; i < numVerts; i++) {
+            if (matAd[i][indice] == 1) { // Verificar si hay un arco apuntando hacia el vértice dado
+                verticesConArco.add(verts[i].info);
+            }
+        }
+        return verticesConArco;
+    }
+
+    //Lista de amigos
+    public List<Usuario> verticesConArcoIdaYVuelta(Usuario nombreVertice) throws Exception {
+        int indice = numVertice(nombreVertice);
+        if (indice < 0)
+            throw new Exception("Vértice no existe");
+
+        List<Usuario> verticesConArcoIdaYVuelta = new ArrayList<>();
+        for (int i = 0; i < numVerts; i++) {
+            if (matAd[indice][i] == 1 && matAd[i][indice] == 1) { // Verificar si hay arco de ida y vuelta
+                verticesConArcoIdaYVuelta.add(verts[i].info);
+            }
+        }
+        return verticesConArcoIdaYVuelta;
+    }
+    
+    //Enviar solicitud
+    public void nuevoArco(Usuario a, Usuario b) throws Exception {
+        int va, vb;
+        va = numVertice(a);
+        vb = numVertice(b);
+        if (va < 0 || vb < 0)
+            throw new Exception("Vértice no existe");
+        matAd[va][vb] = 1;
+    }
+
+    //Sugerencias de amistad
+    public List<Usuario> verticesSinRelacionConArcoIdaVuelta(Usuario nombreVertice, int maxVertices) throws Exception {
+        int indice = numVertice(nombreVertice);
+        if (indice < 0)
+            throw new Exception("Vértice no existe");
+
+        List<Usuario> verticesSinRelacion = new ArrayList<>();
+
+        // Verificar si hay vértices con arco de ida y vuelta con el vértice dado
+        List<Usuario> verticesConArcoIdaVuelta = verticesConArcoIdaYVuelta(nombreVertice);
+
+        // Iterar sobre todos los vértices para encontrar aquellos que no tengan relación con el vértice dado
+        for (int i = 0; i < numVerts; i++) {
+            if (i != indice && !verticesConArcoIdaVuelta.contains(verts[i].info)) {
+                boolean tieneRelacion = false;
+                // Verificar si el vértice tiene alguna relación con otros vértices que tienen arco de ida y vuelta
+                for (int j = 0; j < numVerts; j++) {
+                    if (matAd[i][j] == 1 && verticesConArcoIdaVuelta.contains(verts[j].info)) {
+                        tieneRelacion = true;
+                        break;
+                    }
+                }
+                // Si el vértice no tiene relación con vértices que tienen arco de ida y vuelta, agregarlo a la lista
+                if (!tieneRelacion) {
+                    verticesSinRelacion.add(verts[i].info);
+                }
+            }
+        }
+
+        // Limitar la lista al número máximo de vértices especificado
+        if (verticesSinRelacion.size() > maxVertices) {
+            // Mezclar aleatoriamente la lista
+            Collections.shuffle(verticesSinRelacion, new Random());
+            // Retornar una sublista de la lista mezclada con el tamaño máximo especificado
+            return verticesSinRelacion.subList(0, maxVertices);
+        } else {
+            return verticesSinRelacion;
         }
     }
 }
